@@ -1,7 +1,6 @@
 # This package allows us load PDF documents
 from langchain_community.document_loaders import PyPDFLoader
 import glob
-import os
 
 # File path of where our documents are stored
 DOCS_PATH = "./docs/"
