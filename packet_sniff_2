@@ -1,0 +1,41 @@
+from scapy.all import sniff
+from langchain_community.document_loaders import PyPDFLoader
+import glob
+
+# Function to display captured packets
+def packet_callback(packet):
+    print(f"Captured Packet: {packet.summary()}")
+
+# Function to load and display PDF contents
+def load_pdfs():
+    # File path of where our documents are stored
+    DOCS_PATH = "./docs/"
+    
+    # Create a list of all the files under the ./docs/ directory that are PDFs
+    file_paths = glob.glob(f"{DOCS_PATH}*.pdf")
+    
+    # Empty list to store our PDFs in
+    pdfs = []
+    
+    # Loop through all the files
+    for file_path in file_paths:
+        # Using the PyPDFLoader package, this will load the PDF as an object 
+        pages = PyPDFLoader(file_path).load()
+        
+        # Add our pages to the pdfs list
+        pdfs.append(pages)
+    
+    # Loop through all the PDFs
+    for pdf in pdfs:
+        # Each PDF contains multiple pages
+        for page in pdf:
+            # A "page" object contains multiple fields: author, date, size, etc. The actual content of the page is in the "page_content" field
+            print(f"Page Content: {page.page_content}\n")
+
+# Start sniffing packets (you can specify an interface or use 'any' to capture from all interfaces)
+print("Starting packet sniffing...\n")
+sniff(count=5, prn=packet_callback)  # Capture 5 packets and call the callback function for each packet
+
+# After sniffing, load PDF documents from the directory and print their contents
+print("\nLoading and displaying PDF content...\n")
+load_pdfs()
