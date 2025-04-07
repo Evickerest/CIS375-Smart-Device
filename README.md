@@ -1,7 +1,7 @@
 # CIS375-Smart-Device
 
 ## Set up
-To install the necessary dependencies, ensure that pip is installed and run this command on the terminal:
+To set up, run the set up script:
 ```bash
-pip install -r requirements.txt
+./setup.sh
 ```
