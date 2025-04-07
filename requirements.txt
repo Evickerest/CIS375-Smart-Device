@@ -4,4 +4,8 @@ langchain-community
 pypdf
 scikit-learn
 pandas
+ollama
+sentence-transformers
+faiss-cpu
+langchain-huggingface
 
