@@ -8,4 +8,5 @@ ollama
 sentence-transformers
 faiss-cpu
 langchain-huggingface
+scapy
 

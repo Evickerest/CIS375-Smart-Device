@@ -1,0 +1,90 @@
+from scapy.all import sniff
+from scapy.layers.dot11 import AKMSuite, Dot11, Dot11Beacon, Dot11CCMP, Dot11EltCountry, Dot11EltCountryConstraintTriplet, Dot11QoS, RadioTap, Dot11FCS
+from scapy.layers.eap import EAP, EAPOL, EAPOL_KEY
+
+
+
+layers = []
+
+data = []
+
+# Function to display captured packets
+def packet_callback(packet):
+    # Ensure we are reading 802.11 Packet
+    if (type(packet) != RadioTap): return
+
+    datum = {}
+
+    datum["radiotap.channel.flags.cck"] = 1 if packet.ChannelFlags & 0x20 else 0
+    datum["radiotap.channel.flags.ofdm"] = 1 if packet.ChannelFlags & 0x40 else 0
+    datum["radiotap.channel.freq"] = packet.ChannelFrequency
+    datum["radiotap.datarate"] = packet.Rate 
+    datum["radiotap.dbm_antsignal"] = packet.dBm_AntSignal 
+    datum["radiotap.lengthc"] = packet.len 
+    datum["radiotap.mactime"] = packet.mac_timestamp
+    datum["radiotap.present.tsft"] = 1 if packet.present & 0x1 else 0
+    datum["radiotap.rxflags"] = packet.RXFlags # Might need to change to a string
+    datum["radiorap.timestamp.ts"] = packet.timestamp
+    datum["radiorap.timestamp.ts"] = packet.timestamp
+    datum["radiodap.vendor_oui"] = None
+
+    layers.append([packet.payload.layers()])
+
+
+    if Dot11EltCountry in packet:
+        datum["wlan.country_info.fnm"] = packet.
+
+
+    if Dot11FCS in packet:
+        dot11 = packet[Dot11]
+
+
+        datum["wlan.duration"] = dot11.ID
+        datum["wlan.analysis.kck"] = None 
+        datum["wlan.analysis.kek"] = None 
+        datum["wlan.FCField"] = dot11.FCfield 
+
+        # Calculate addresses based on tods and fromds
+        tods = 1 if dot11.FCfield & 0x1 else 0
+        fromds = 1 if dot11.FCfield & 0x2 else 0
+
+        if tods == 0 and fromds == 0:
+            datum["wlan.da"] = dot11.addr1 
+            datum["wlan.sa"] = dot11.addr2
+            datum["wlan.bssid"] = dot11.addr3
+            datum["wlan.ta"] = None 
+        elif tods == 0 and fromds == 1:
+            datum["wlan.da"] = dot11.addr1 
+            datum["wlan.bssid"] = dot11.addr2
+            datum["wlan.sa"] = dot11.addr3
+            datum["wlan.ta"] = None 
+        elif tods == 1 and fromds == 0:
+            datum["wlan.bssid"] = dot11.addr1 
+            datum["wlan.sa"] = dot11.addr2
+            datum["wlan.da"] = dot11.addr3
+            datum["wlan.ta"] = None 
+        elif tods == 1 and fromds == 1:
+            datum["wlan.ra"] = dot11.addr1 
+            datum["wlan.ta"] = dot11.addr2
+            datum["wlan.da"] = dot11.addr3
+            datum["wlan.sa"] = dot11.addr4 
+
+
+
+
+
+    data.append(datum)
+
+
+
+
+
+# Start sniffing packets (you can specify an interface or use 'any' to capture from all interfaces)
+print("Starting packet sniffing...\n")
+sniff(iface="wlan0mon", count = 10, prn=packet_callback)  # Capture 5 packets and call the callback function for each packet
+
+for i, layer in enumerate(layers):
+    print(f"{i}: {layer}\n")
+    print(f"{i}: {data[i]}\n")
+
+
