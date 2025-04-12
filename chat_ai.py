@@ -45,6 +45,8 @@ while ((user_input := input("Enter prompt (q to quit): ")) != "q"):
 
     # Create a message in Ollama's format using the prompt 
     message = [{"role": "user", "content": prompt}]
+
+    # print(prompt)
     
     # The "chat" function will query the model running at http://localhost:11434
     # This returns multiple "parts" (i.e., words from the model), which we can loop
