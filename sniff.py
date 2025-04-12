@@ -2,6 +2,7 @@ from scapy.all import sniff
 from scapy.layers.dot11 import AKMSuite, Dot11, Dot11Beacon, Dot11CCMP, Dot11Elt, Dot11EltCountry, Dot11EltCountryConstraintTriplet, Dot11QoS, RadioTap, Dot11FCS, Dot11Deauth, Dot11Disas, Dot11ProbeResp, Dot11EltRSN, Dot11Elt
 from scapy.layers.eap import EAPOL, EAPOL_KEY
 from sklearn.preprocessing import StandardScaler, RobustScaler
+from multiprocessing.connection import Client
 from pickle import  load
 import pandas as pd
 
@@ -11,16 +12,18 @@ pd.set_option("display.max_columns", None)
 packet_number = 1
 last_packet_time = 0.0
 data = []
-categorical_columns = ["radiotap.present.tsft", "radiotap.rxflags", "wlan.bssid", "wlan.da", "wlan.fc.ds", "wlan.ra", "wlan.sa", "wlan.ta", "wlan.ssid", "wlan.tag", "wlan.tag.length", "wlan_rsna_eapol.keydes.data", "wlan_rsna_eapol.keydes.nonce"]
 
-
-columns = ['frame.len', 'frame.number', 'frame.time_delta',
-       'radiotap.channel.flags.cck', 'radiotap.channel.flags.ofdm',
-       'radiotap.channel.freq', 'radiotap.length', 'wlan.duration',
-       'wlan.fc.frag', 'wlan.fc.order', 'wlan.fc.moredata',
-       'wlan.fc.protected', 'wlan.fc.pwrmgt', 'wlan.fc.type', 'wlan.fc.retry',
-       'wlan.fc.subtype']
-# columns = ["wlan.fc.type", "wlan.fc.subtype"]
+# columns_subset = ['frame.len', 'frame.time_delta', 'radiotap.channel.flags.cck',
+#        'radiotap.channel.flags.ofdm', 'radiotap.channel.freq', 
+#        'radiotap.length', 'radiotap.rxflags', 'wlan.duration', 'wlan.fc.ds', 
+#        'wlan.fc.frag', 'wlan.fc.order', 'wlan.fc.moredata', 'wlan.fc.protected',
+#        'wlan.fc.pwrmgt', 'wlan.fc.type', 'wlan.fc.retry', 'wlan.fc.subtype',
+#        'wlan.ra', 'wlan.ta', 'wlan_radio.frequency']
+columns_subset = ['frame.len', 'frame.time_delta', 'radiotap.channel.flags.cck',
+       'radiotap.channel.flags.ofdm', 'radiotap.channel.freq', 
+       'radiotap.length', 'radiotap.rxflags', 'wlan.duration', 'wlan.fc.ds', 
+       'wlan.fc.frag', 'wlan.fc.order', 'wlan.fc.moredata', 'wlan.fc.protected',
+       'wlan.fc.pwrmgt', 'wlan.fc.type', 'wlan.fc.retry', 'wlan.fc.subtype']
 
 def expand(x):
     yield x
@@ -28,10 +31,12 @@ def expand(x):
         x = x.payload
         yield x
 
-
-
 model = load(open("./models/model3.pkl", "rb"))
 results = []
+
+# Open up port
+address = ("localhost", 6000)
+conn = Client(address)
 
 # Function to display captured packets
 def packet_callback(packet):
@@ -54,7 +59,7 @@ def packet_callback(packet):
     datum["radiotap.length"] = packet.len 
     datum["radiotap.mactime"] = packet.mac_timestamp
     datum["radiotap.present.tsft"] = f"{1 if "TSFT" in packet.present else 0}-0-0"
-    datum["radiotap.rxflags"] = f"0x{(packet.RXFlags.value):#0{8}}"
+    datum["radiotap.rxflags"] = packet.RXFlags.value
     datum["radiotap.timestamp.ts"] = packet.timestamp
 
 
@@ -158,7 +163,7 @@ def packet_callback(packet):
         datum["wlan.duration"] = dot11.ID
         datum["wlan.analysis.kck"] = None 
         datum["wlan.analysis.kek"] = None 
-        datum["wlan.fc.ds"] = f"0x{(dot11.FCfield.value & 0x3):#0{8}}"
+        datum["wlan.fc.ds"] = dot11.FCfield.value 
 
         # Calculate addresses based on tods and fromds
         tods = 1 if "to-DS" in dot11.FCfield else 0
@@ -228,7 +233,7 @@ def packet_callback(packet):
         datum["wlan.fcs.bad_checksum"] = 0
         datum["wlan.seq"] = 0
 
-    datum = datum[columns]
+    datum = datum[columns_subset]
 
     # scaler = RobustScaler()
     # datum = scaler.fit_transform(datum)
@@ -239,7 +244,13 @@ def packet_callback(packet):
     # print(result)
     results.append(result)
 
-
+    # Every 100th packet send the results to chat model:
+    if packet_number % 100 == 0:
+        string = ""
+        for ele in set(results[packet_number - 100: packet_number + 1]):
+            string += f"Break down of packets #{packet_number - 100} to #{packet_number + 1}"
+            string += f"Packet of Type {ele} occured {results[packet_number - 100: packet_number + 1].count(ele)} times\n"
+        conn.send(string)
 
 # Start sniffing packets (you can specify an interface or use 'any' to capture from all interfaces)
 print("Starting packet sniffing...\n")
@@ -255,3 +266,4 @@ for e in set(results):
     print(f"\tLabel {e} occured {results.count(e)} times")
 
 
+conn.close()

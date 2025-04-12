@@ -1,58 +1,69 @@
-import glob
 from ollama import chat
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
+from pickle import load
+from multiprocessing.connection import Listener
 
-# File path of where our documents are stored
-DOCS_PATH = "./docs/"
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+MAX_POLL = 10
 
-# This will create a list of all the files under the ./docs/ directory that are pdfs
-file_paths = glob.glob(f"{DOCS_PATH}*.pdf")
+# Load our PDF text finder from our precomputed Vector DB
+print("Loading vector db...\n")
+vector_db = load(open("./models/vector.pkl", "rb"))
 
-# Empty list to store our pdfs in
-pdfs = []
+# Listen to port to get status of any Network Attacks
+address = ("localhost", 6000)
+listener = Listener(address)
 
-# Loop through all the files
-for file_path in file_paths:
-    # Using the PyPDFLoader package, this will load the PDF as an object 
-    pages = PyPDFLoader(file_path).load()
+print("Waiting for connection from packet sniffer...\n")
+conn = listener.accept()
 
-    # Add all the pages' content to the pdfs list
-    pdfs.extend([page.page_content for page in pages])
+print("Connected to packet sniffer. Initalizing AI Agent...\n\n")
 
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=0)
-chunks = [chunk for doc in pdfs for chunk in splitter.split_text(doc)]
+# Set up context for AI
+prompt = "You are an AI agent with the purpose of helping the user set up and protect a Smart Home. Answer the user's questions based on your knowlege and given documents and try to the help the user with any network issues"
 
-embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-vector_db = FAISS.from_texts(chunks, embeddings)
+# Create a message in Ollama's format using the prompt 
+message = [{"role": "user", "content": prompt}]
+    
+# The "chat" function will query the model running at http://localhost:11434
+# This returns multiple "parts" (i.e., words from the model), which we can loop
+# through and print out the content of the message
+for part in chat('llama3:8b', messages=message, stream=True):
+  print(part['message']['content'], end='', flush=True)
+
+# Add some newlines after response
+print("\n\n")
 
 # Loop while user input is not equal to "q", assign input to variable "user_input"
 while ((user_input := input("Enter prompt (q to quit): ")) != "q"):
     # Get relavent chunks based on user input
     relevant_chunks = vector_db.similarity_search(user_input, k=10)
 
+    # Get messages from packet sniffer
+    # Continuously poll while there are still messages to get, or until hit limit
+    network_status = "" 
+    poll = 0
+    while conn.poll(0) and poll < MAX_POLL:
+        network_status += conn.recv()
+        poll += 1
+
+    # Replace the labels from the model to nice easy to read names
+    network_status.replace("Deauth", "Deauthentication Attack")
+    network_status.replace("Disas", "Dissociation Attack")
+
     # Get page content from the relavent pages 
     context = "\n".join([chunk.page_content for chunk in relevant_chunks])
 
     # Create prompt to the AI 
-    prompt = f"""
-        You are an AI agent with the purpose of helping the user set up and protect a Smart Home. You have access to the following documents: {context}
+    prompt = f"""You have access to the following documents, if relavent: {context}
 
-        Answer the following question based on the documents and your knowledge: {user_input}"""
+        This is the current status of any attacks on the network, if any: {network_status} 
 
-    # Create a message in Ollama's format using the prompt 
+        Here is the user's question: {user_input}"""
+
     message = [{"role": "user", "content": prompt}]
-
-    # print(prompt)
     
-    # The "chat" function will query the model running at http://localhost:11434
-    # This returns multiple "parts" (i.e., words from the model), which we can loop
-    # through and print out the content of the message
-    for part in chat('llama3-chatqa', messages=message, stream=True):
+    for part in chat('llama3:8b', messages=message, stream=True):
       print(part['message']['content'], end='', flush=True)
 
-    # Add some newlines after the AI response
     print("\n\n")
+
+print("Bye!")

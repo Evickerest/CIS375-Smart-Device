@@ -13,94 +13,8 @@ import pandas as pd
 
 pd.set_option("display.max_rows", None)
 
-print("Cobining CSVs...")
-
-deauths = [
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_0.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_1.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_2.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_3.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_4.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_5.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_6.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_7.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_8.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_9.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_10.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_11.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_12.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_13.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_14.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_15.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_16.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_17.csv",
-    # "../Downloads/awid-csv/CSV/1.Deauth/Deauth_18.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_19.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_20.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_21.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_22.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_23.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_24.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_25.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_26.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_27.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_28.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_29.csv",
-    "../Downloads/awid-csv/CSV/1.Deauth/Deauth_30.csv",
-]
-
-disas = [
-    # "../Downloads/awid-csv/CSV/2.Disas/Disas_0.csv",
-    # "../Downloads/awid-csv/CSV/2.Disas/Disas_1.csv",
-    "../Downloads/awid-csv/CSV/2.Disas/Disas_2.csv",
-    "../Downloads/awid-csv/CSV/2.Disas/Disas_3.csv",
-    "../Downloads/awid-csv/CSV/2.Disas/Disas_4.csv",
-    # "../Downloads/awid-csv/CSV/2.Disas/Disas_28.csv",
-    # "../Downloads/awid-csv/CSV/2.Disas/Disas_29.csv",
-    "../Downloads/awid-csv/CSV/2.Disas/Disas_30.csv",
-    "../Downloads/awid-csv/CSV/2.Disas/Disas_31.csv",
-    "../Downloads/awid-csv/CSV/2.Disas/Disas_32.csv",
-]
-
-reassoc = [
-    # "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_0.csv",
-    # "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_1.csv",
-    "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_2.csv",
-    "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_3.csv",
-    "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_4.csv",
-    # "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_22.csv",
-    # "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_23.csv",
-    "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_24.csv",
-    "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_25.csv",
-    "../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_26.csv",
-]
-
-rouge = [
-    # "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_0.csv",
-    # "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_1.csv",
-    "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_2.csv",
-    "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_3.csv",
-    "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_4.csv",
-    # "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_23.csv",
-    # "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_24.csv",
-    "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_25.csv",
-    "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_26.csv",
-    "../Downloads/awid-csv/CSV/4.Rogue_AP/RogueAP_27.csv",
-]
-
-files = []
-files.extend(deauths)
-# files.extend(disas)
-# files.extend(reassoc)
-# files.extend(rouge)
-
-
-combined_df = pd.concat((pd.read_csv(f, sep=",", low_memory=False) for f in files), ignore_index=True)
-print("Finished combining CSVs")
-print(f"Combined Shape: {combined_df.shape}\n")
-
 # 802.11 Only columns
-cols = [
+dot11Columns = [
     "frame.encap_type", "frame.len", "frame.number", "frame.time", "frame.time_delta", "frame.time_delta_displayed", "frame.time_epoch",
     "frame.time_relative", "radiotap.channel.flags.cck", "radiotap.channel.flags.ofdm", "radiotap.channel.freq", "radiotap.datarate",
     "radiotap.dbm_antsignal", "radiotap.length", "radiotap.mactime", "radiotap.present.tsft", "radiotap.rxflags", "radiotap.timestamp.ts",
@@ -114,9 +28,24 @@ cols = [
     "eapol.keydes.key_len", "eapol.keydes.replay_counter", "eapol.len", "eapol.type", "Label"
 ]
 
-df = combined_df[cols]
-print(f"Column Trimmed Shape: {df.shape}\n")
 
+
+deauths = [f"../Downloads/awid-csv/CSV/1.Deauth/Deauth_{i}.csv" for i in (19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30)]
+disas = [f"../Downloads/awid-csv/CSV/2.Disas/Disas_{i}.csv" for i in (0, 1, 2, 3, 4, 30, 31, 34, 35, 36)]
+reassoc = [f"../Downloads/awid-csv/CSV/3.(Re)Assoc/(Re)Assoc_{i}.csv" for i in (0, 1, 2, 3, 4, 30, 31, 34, 35, 36)]
+rogue = [f"../Downloads/awid-csv/CSV/4.Rogue_AP/Rogue_{i}.csv" for i in (0, 1, 2, 3, 4, 30, 31, 34, 35, 36)]
+
+files = deauths + disas
+
+
+print("Combining CSVs...\n")
+
+# Load all of the CSVs and combine them into one DataFrame
+# Only read in the dot11 related columns
+df = pd.concat((pd.read_csv(f, sep=",", low_memory=False, usecols=dot11Columns) for f in files), ignore_index=True)
+
+print("Finished combining CSVs\n")
+print(f"Combined Shape: {df.shape}\n")
 print("Distribution of Labels")
 print(df["Label"].value_counts(normalize=True))
 print("\n")
@@ -131,47 +60,43 @@ df =df.dropna()
 
 print(f"Null Rows dropped: {df.shape}\n")
 
+columns_subset = ['frame.len', 'frame.time_delta', 'radiotap.channel.flags.cck',
+       'radiotap.channel.flags.ofdm', 'radiotap.channel.freq', 
+       'radiotap.length', 'radiotap.rxflags', 'wlan.duration', 'wlan.fc.ds', 'wlan.fc.frag',
+       'wlan.fc.order', 'wlan.fc.moredata', 'wlan.fc.protected',
+       'wlan.fc.pwrmgt', 'wlan.fc.type', 'wlan.fc.retry', 'wlan.fc.subtype']
 
-# columns = ['frame.encap_type', 'frame.len', 'frame.number', 'frame.time_delta',
-#        'radiotap.channel.flags.cck', 'radiotap.channel.flags.ofdm',
-#        'radiotap.channel.freq', 'radiotap.datarate', 'radiotap.length',
-#        'radiotap.mactime', 'radiotap.timestamp.ts', 'wlan.duration',
-#        'wlan.fc.frag', 'wlan.fc.order', 'wlan.fc.moredata',
-#        'wlan.fc.protected', 'wlan.fc.pwrmgt', 'wlan.fc.type', 'wlan.fc.retry',
-#        'wlan.fc.subtype', 'wlan_radio.duration']
+print(f"Shape: {df.shape}\n")
 
-columns = ['frame.len', 'frame.number', 'frame.time_delta',
-       'radiotap.channel.flags.cck', 'radiotap.channel.flags.ofdm',
-       'radiotap.channel.freq', 'radiotap.length', 'wlan.duration',
-       'wlan.fc.frag', 'wlan.fc.order', 'wlan.fc.moredata',
-       'wlan.fc.protected', 'wlan.fc.pwrmgt', 'wlan.fc.type', 'wlan.fc.retry',
-       'wlan.fc.subtype']
-# columns = ["wlan.fc.type", "wlan.fc.subtype"]
+print("Cleaning up columns\n")
+df.loc[:, "radiotap.rxflags"] = df["radiotap.rxflags"].apply(int, base=16)
+df.loc[:, "wlan.fc.ds"] = df["wlan.fc.ds"].apply(int, base=16)
+
+# categorial_columns = ["wlan.ra", "wlan.ta"]
+# df = df.drop(categorial_columns, axis=1)
+
+# # Convert MAC address into integers
+# for cat in categorial_columns:
+#     labelEncoder = LabelEncoder()
+#     df[cat] = labelEncoder.fit_transform(df[cat])
 
 
-X_scaled = df[columns]
+# Split the Data
+print("Splitting the columns...\n")
+X = df[columns_subset]
 y = df["Label"]
 
-print(f"Numerical Only Columns Shape: {X_scaled.shape}\n")
+# Standardized the data
+# scaler = StandardScaler()
+# X = scaler.fit_transform(X)
 
+print(f"Numerical Only Columns Shape: {X.shape}\n")
 
-print(X_scaled.head())
-
-
-# # A important bit of preprocessing data is to normalize our data. Each field in our data set has some range of data. However,
-# # If one numerical field only has a range of 1-2, while another field has a range of 1-1000, the latter field will inadvertnly
-# # affect the AI much more. Thus, we normalize our data to all be between 0 and 1 to remove bias.
-#
-# # ----- AI Training -------
-#
-# # This splits our data into quadrants:
-# # 80% of the data and labels (X_train, y_train), will be used to train the AI
-# # 20% of the data and labes (X_test, y_test), will be used to test the AI after it has been trained
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 rfc = RandomForestClassifier(n_estimators=100, max_depth=None, class_weight="balanced", random_state=42)
 
-print("Trying AI...\n")
+print("Training AI...\n")
 rfc.fit(X_train, y_train)
 
 print("Predicting with Training data with AI...\n")
@@ -180,12 +105,10 @@ y_pred = rfc.predict(X_test)
 print("Confusuion Matrix:\n", confusion_matrix(y_test, y_pred))
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
-importances = rfc.feature_importances_
-feature_names = X_scaled.columns
-
+# Print out the features that have the most weight in the model
 idf = pd.DataFrame({
-    "Feature": feature_names,
-    "Importance": importances
+    "Feature": columns_subset,
+    "Importance": rfc.feature_importances_
 }).sort_values(by="Importance", ascending=False)
 
 print("Importances:\n")
