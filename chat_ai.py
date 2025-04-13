@@ -34,30 +34,43 @@ print("\n\n")
 
 # Loop while user input is not equal to "q", assign input to variable "user_input"
 while ((user_input := input("Enter prompt (q to quit): ")) != "q"):
-    # Get relavent chunks based on user input
-    relevant_chunks = vector_db.similarity_search(user_input, k=10)
+    # Ask the user if they want to search through PDFs, ask because it takes awhile
+    use_pdfs = input("Should the AI search through the docs? (yes or no): ")
+
+    relevant_chunks = []
+    if use_pdfs == "yes":
+        # Get relavent chunks based on user input
+        relevant_chunks = vector_db.similarity_search(user_input, k=10)
 
     # Get messages from packet sniffer
     # Continuously poll while there are still messages to get, or until hit limit
     network_status = "" 
     poll = 0
-    while conn.poll(0) and poll < MAX_POLL:
-        network_status += conn.recv()
-        poll += 1
+    try:
+        while conn.poll(0) and poll < MAX_POLL:
+            network_status += conn.recv()
+            poll += 1
+    except:
+        # Do nothing if we can't get anything from packet sniffer
+        pass
 
     # Replace the labels from the model to nice easy to read names
     network_status.replace("Deauth", "Deauthentication Attack")
     network_status.replace("Disas", "Dissociation Attack")
 
     # Get page content from the relavent pages 
-    context = "\n".join([chunk.page_content for chunk in relevant_chunks])
+    context = ""
+    if use_pdfs == "yes":
+        doc_info = "\n".join([chunk.page_content for chunk in relevant_chunks])
+        context = f"You have access to the following documents, use them if relevant to the user: {doc_info}"
 
     # Create prompt to the AI 
-    prompt = f"""You have access to the following documents, if relavent: {context}
+    prompt = f"""
+        {context}
 
         This is the current status of any attacks on the network, if any: {network_status} 
 
-        Here is the user's question: {user_input}"""
+        Here is the user's input: {user_input}"""
 
     message = [{"role": "user", "content": prompt}]
     

@@ -241,7 +241,7 @@ def packet_callback(packet):
     # print(datum)
 
     result = model.predict(datum)[0]
-    # print(result)
+    print(result)
     results.append(result)
 
     # Every 100th packet send the results to chat model:
@@ -255,6 +255,7 @@ def packet_callback(packet):
 # Start sniffing packets (you can specify an interface or use 'any' to capture from all interfaces)
 print("Starting packet sniffing...\n")
 
+input("Waiting for input to start...\n")
 
 try:
     sniff(iface="wlan0mon", prn=packet_callback)  # Capture 5 packets and call the callback function for each packetS
